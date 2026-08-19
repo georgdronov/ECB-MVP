@@ -1,197 +1,215 @@
 # Embeddable Chatbot Builder — Implementation Plan
 
-> Living document. We check items with `- [x]` as they are completed and verified.
-> Product copy and UI are in **English**. This plan is in Russian for our own coordination.
+> Living document. Completed items are marked with `- [x]`.
+> Product copy, UI, and documentation are in English.
 
-## Продукт
+## Product
 
-Приложение, которое превращает документы и знания компании в чат-бота.
-Бот доступен внутри приложения как ChatGPT-подобный интерфейс и как embeddable-виджет
-для встраивания на сторонние сайты.
+An application that turns company documents and knowledge into a chatbot.
+The bot is available inside the app as a ChatGPT-like interface and as an
+embeddable widget for third-party websites.
 
-## Стек
+## Stack
 
-- Next.js (App Router) + TypeScript
+- Next.js App Router + TypeScript
 - Tailwind CSS
-- SQLite (`better-sqlite3`) — локальное хранилище
-- OpenRouter — chat completions и embeddings
-- `pdf-parse` (PDF), `mammoth` (DOCX), нативно TXT/MD
-- Локальная email/password авторизация (сессии через httpOnly cookie)
+- SQLite (`better-sqlite3`) for local storage
+- OpenRouter for chat completions and embeddings
+- `pdf-parse` for PDF, `mammoth` for DOCX, native TXT/MD support
+- Local email/password authentication with httpOnly cookie sessions
 
-## Границы MVP
+## MVP Scope
 
-Реализуем:
+Included:
 
-- Регистрация/вход, изоляция данных по пользователю
-- Один chatbot на пользователя
-- Загрузка PDF, DOCX, TXT, MD + добавление knowledge вручную
-- Автоматический разбор, чанкинг и индексация (embeddings)
-- RAG-ответы строго по загруженному контенту + источники
-- ChatGPT-подобный playground со стримингом
-- Настоящий embed script + iframe-виджет
-- Demo website для проверки виджета
-- Free/Pro pricing + mock billing + серверные лимиты
-- Адаптивный landing page
-- Presentation deliverable (screenshare script)
+- Registration/login with per-user data isolation
+- One chatbot per user
+- PDF, DOCX, TXT, MD uploads and manually added knowledge
+- Text extraction, chunking, and embedding indexing
+- Grounded RAG answers with sources
+- ChatGPT-like playground
+- Real embed script and iframe widget
+- Demo website for widget verification
+- Free/Pro pricing, mock billing, and server-side limits
+- Responsive landing page
+- Presentation deliverable
 
-Не делаем (вне scope):
+Out of scope:
 
-- Команды и роли, несколько ботов, analytics dashboard
-- CRM-интеграции, scraping сайтов
-- Real Stripe, OAuth, password recovery
-- Продвинутый редактор промптов, обучение моделей
+- Teams, roles, multiple bots, analytics dashboard
+- CRM integrations and website scraping
+- Real Stripe, OAuth, and password recovery
+- Advanced prompt editor and model training
 
 ## Pricing
 
-- Free ($0): 3 документа, 50 сообщений/мес, 5 MB/файл, 1 бот, widget, branding "Powered by"
-- Pro ($29/мес): 50 документов, 2000 сообщений/мес, 15 MB/файл, без branding, расширенная кастомизация
+- Free ($0): 3 documents, 50 messages/month, 5 MB/file, one bot, widget, and
+  "Powered by" branding
+- Pro ($29/month): 50 documents, 2,000 messages/month, 15 MB/file, no branding,
+  and expanded customization
 
-Billing — mock, но flow выглядит как реальный SaaS checkout.
+Billing is mocked but follows a realistic SaaS checkout flow.
 
 ---
 
-# Имплементационные шаги
+# Implementation Steps
 
-## Шаг 0. Инициализация проекта
-- [x] Next.js + TypeScript + Tailwind проект создан
-- [x] Структура папок (`app`, `lib`, `components`, `docs`)
-- [x] `.env.example` с `OPENROUTER_API_KEY`, `SESSION_SECRET`
-- [x] `.gitignore` (node_modules, .env, *.sqlite)
-- [x] README со скриптами запуска
-- [x] `npm run dev` стартует пустую страницу
-- [x] `npm run lint` и `npm run typecheck` проходят без ошибок
-- **Готово когда:** dev-сервер запускается без ошибок, Tailwind применяется
+## Step 0. Project Initialization
 
-## Шаг 1. Дизайн-система
-- [x] Токены цвета, типографика, spacing в Tailwind config
-- [x] Базовые компоненты: Button, Input, Card, Badge, Modal, Toast
-- [x] Состояния hover/focus/disabled/loading
-- **Готово когда:** компоненты переиспользуемы и адаптивны
+- [x] Next.js + TypeScript + Tailwind project created
+- [x] Project structure (`app`, `lib`, `components`, `docs`)
+- [x] `.env.example` with `OPENROUTER_API_KEY` and `SESSION_SECRET`
+- [x] `.gitignore` for dependencies, env files, and SQLite data
+- [x] README with setup and scripts
+- [x] `npm run dev` starts successfully
+- [x] `npm run lint` and `npm run typecheck` pass
+- **Done when:** the dev server runs and Tailwind is applied
 
-## Шаг 2. База данных (SQLite)
-- [x] Схема: `users`, `chatbot_settings`, `documents`, `document_chunks`,
-      `conversations`, `messages`, `subscription`, `monthly_usage`
-- [x] Инициализация БД и миграции при старте
-- [x] Хелперы доступа к данным
-- **Готово когда:** таблицы создаются автоматически, запись/чтение работают
+## Step 1. Design System
 
-## Шаг 3. Авторизация
-- [x] Регистрация (email + password, хеш bcrypt/scrypt)
-- [x] Вход и выход
-- [x] Сессия через httpOnly cookie
-- [x] Серверная защита `/app/*` через redirect
-- [x] Изоляция данных по `userId` в auth/db слоях
-- [x] HTTP smoke test: guest redirect, register, authenticated access
-- **Готово когда:** нельзя увидеть чужие данные, guest не заходит в `/app`
+- [x] Color, typography, and spacing tokens
+- [x] Button, Input, Card, Badge, Modal, and Toast components
+- [x] Hover, focus, disabled, and loading states
+- **Done when:** components are reusable and responsive
 
-## Шаг 4. Landing page
-- [x] Hero + value proposition + CTA
+## Step 2. SQLite Database
+
+- [x] Tables for users, chatbot settings, documents, chunks, conversations,
+  messages, subscriptions, usage, and onboarding progress
+- [x] Automatic initialization and migrations
+- [x] Database access helpers
+- **Done when:** tables are created and CRUD operations work
+
+## Step 3. Authentication
+
+- [x] Registration with password hashing
+- [x] Login and logout
+- [x] httpOnly cookie sessions
+- [x] Server-side protection for `/app/*`
+- [x] Per-user data isolation
+- **Done when:** guests cannot access the app and users cannot see other data
+
+## Step 4. Landing Page
+
+- [x] Hero, value proposition, and CTA
 - [x] How it works
-- [x] Features
-- [x] Пример embed-кода
-- [x] Pricing (Free/Pro)
-- [x] Footer
-- [x] Полная адаптивность
-- **Готово когда:** страница убедительна и responsive на mobile/desktop
+- [x] Feature overview
+- [x] Embed code example
+- [x] Free/Pro pricing
+- [x] Footer and responsive layout
+- **Done when:** the page is clear and responsive on desktop and mobile
 
-## Шаг 5. App shell + Dashboard
-- [x] Сайдбар/навигация (Dashboard, Knowledge, Playground, Embed, Billing)
-- [x] Dashboard: статус бота, кол-во документов, usage, тариф, быстрые действия
-- [x] Responsive desktop sidebar и mobile navigation
-- [x] Onboarding checklist для первого запуска
-- **Готово когда:** навигация работает, метрики берутся из БД
+## Step 5. App Shell and Dashboard
 
-## Шаг 6. Загрузка и разбор документов
-- [x] Drag-and-drop upload + выбор файла
-- [x] Валидация типа и размера (по тарифу, на сервере)
-- [x] Извлечение текста: PDF, DOCX, TXT, MD
-- [x] Очистка и чанкинг с overlap
-- [x] Статусы Processing/Ready/Failed
-- [x] Удаление с подтверждением
-- [x] Вкладка Text knowledge (title + текст)
-- **Готово когда:** все 4 формата + ручной текст индексируются, ошибки видны
+- [x] Sidebar navigation for Dashboard, Knowledge, Playground, Embed, and Billing
+- [x] Dashboard metrics, usage, plan, and quick actions
+- [x] Responsive mobile navigation
+- [x] Collapsible desktop sidebar
+- [x] Live assistant preview
+- [x] Onboarding checklist
+- **Done when:** navigation works and metrics come from the database
 
-## Шаг 7. Embeddings и индексация (OpenRouter)
-- [x] Клиент OpenRouter embeddings
-- [x] Batch-embeddings для чанков
-- [x] Сохранение векторов в БД
-- [x] Обработка ошибок API и лимитов
-- [x] Реальный API smoke test с бесплатной embeddings-моделью
-- **Готово когда:** после загрузки документ переходит в Ready с чанками+векторами
+## Step 6. Knowledge Ingestion
 
-## Шаг 8. RAG-поиск и chat
-- [x] Embedding вопроса
-- [x] Cosine similarity по чанкам пользователя
-- [x] Выбор top-K релевантных чанков
-- [x] Сборка промпта: контекст + история + вопрос
-- [ ] Стриминг ответа
-- [x] Возврат источников
-- [x] Отказ выдумывать при отсутствии контекста
-- **Готово когда:** вопрос по документу даёт корректный ответ с источником
+- [x] Drag-and-drop upload and file picker
+- [x] Server-side type and size validation
+- [x] PDF, DOCX, TXT, and MD text extraction
+- [x] Cleaning and overlapping chunking
+- [x] Processing, Ready, and Failed states
+- [x] Delete confirmation
+- [x] Manual text knowledge
+- [x] Plan limit popup with Billing link
+- **Done when:** supported formats and manual text are processed with clear errors
 
-## Шаг 9. Playground
-- [x] ChatGPT-подобный UI, история диалога
-- [ ] Streaming + loading states
-- [x] Источники под ответом
-- [x] Empty state с примерами вопросов
-- [x] Сохранение conversations/messages
-- **Готово когда:** полноценный диалог с ботом работает и сохраняется
+## Step 7. Embeddings and Indexing
 
-## Шаг 10. Embed widget + demo website
-- [x] Настройки: имя, welcome message, accent color, позиция
-- [x] Live preview + готовый embed snippet + копирование
-- [x] `public/widget.js`: floating launcher + iframe
-- [x] Публичная страница виджета `/embed/[botId]`
-- [x] Публичный chat API по `chatbotId` (без секретов)
-- [x] `/demo-site` с реальным подключением скрипта
-- [ ] Branding "Powered by" на Free
-- **Готово когда:** виджет реально работает на demo website и отвечает по докам
+- [x] OpenRouter embeddings client
+- [x] Batch embeddings
+- [x] Vector persistence in SQLite
+- [x] API error handling
+- [x] Real smoke test with a free embedding model
+- **Done when:** documents become Ready with chunks and vectors
 
-## Шаг 11. Pricing и mock billing
-- [x] Страница Billing: текущий тариф, usage, сравнение планов
-- [x] Mock checkout (upgrade/downgrade)
-- [x] Сохранение тарифа в БД
-- [x] Серверные gates: документы, сообщения, размер файла, branding
-- **Готово когда:** Free-лимиты реально блокируют, upgrade снимает ограничения
+## Step 8. RAG Search and Chat
 
-## Шаг 12. Безопасность публичного бота
-- [x] Публичный `chatbotId` без секретов
-- [x] Ограничение длины вопроса
-- [x] Простое rate limiting
-- [x] Безопасный вывод (без исполнения HTML)
-- **Готово когда:** публичный endpoint устойчив к базовым злоупотреблениям
+- [x] Query embeddings
+- [x] Cosine similarity search
+- [x] Top-K relevant chunks
+- [x] Context, history, and question prompt
+- [x] Sources in responses
+- [x] Grounded fallback when context is missing
+- **Done when:** document questions return sourced answers
 
-## Шаг 13. Полировка и состояния
-- [x] Loading/empty/error states на всех ключевых страницах
-- [x] Подтверждение удаления и серверные error messages
-- [x] Проверка адаптивности mobile → desktop в layout-классах
-- [x] Копирайтинг и микротексты
-- **Готово когда:** продукт ощущается завершённым
+## Step 9. Playground
 
-## Шаг 14. Проверка качества
-- [x] `npm run lint` без ошибок
-- [x] `npm run typecheck` без ошибок
-- [x] `npm run build` успешен
-- [x] Ручной прогон основного flow с бесплатными OpenRouter models
-- **Готово когда:** все проверки зелёные
+- [x] ChatGPT-like interface and conversation history
+- [x] Loading and error states
+- [x] Sources below answers
+- [x] Example questions and empty state
+- [x] Conversation/message persistence
+- [x] Shared widget customization: colors and font
+- **Done when:** a complete conversation works and is persisted
 
-## Шаг 15. Презентация
-- [x] `docs/DEMO_SCRIPT.md` (3–5 мин screenshare)
-- [x] Тестовый документ с известными фактами
-- [x] Обновлённый README (запуск, env, демо)
-- **Готово когда:** демо можно провести по сценарию без импровизации
+## Step 10. Embed Widget
 
----
+- [x] Name, welcome message, colors, position, and font settings
+- [x] Live preview and generated snippet
+- [x] Copy confirmation
+- [x] `public/widget.js` launcher and iframe
+- [x] Public widget route
+- [x] Public chat API
+- [x] Demo website
+- [x] Free-plan branding
+- **Done when:** the widget works on the demo website
 
-# Definition of Done (весь MVP)
+## Step 11. Pricing and Mock Billing
 
-- [ ] Проект запускается одной командой
-- [ ] PDF, DOCX, TXT, MD и ручной текст загружаются и индексируются
-- [ ] Вопрос по документу даёт корректный ответ с источником
-- [ ] На неизвестный вопрос бот не выдумывает информацию
-- [ ] Виджет работает на demo website, embed snippet копируется
-- [ ] Free-лимиты блокируют превышение, mock upgrade снимает ограничения
-- [ ] Авторизация изолирует данные пользователей
-- [ ] Все страницы адаптивны (mobile + desktop)
-- [ ] lint, typecheck, build проходят
-- [ ] Готов сценарий презентации
+- [x] Billing page with plans and usage
+- [x] Mock upgrade/downgrade
+- [x] Plan persistence
+- [x] Server-side document, message, file-size, and branding gates
+- **Done when:** limits block correctly and upgrade changes access
+
+## Step 12. Public Bot Security
+
+- [x] Public chatbot ID contains no secrets
+- [x] Message length limit
+- [x] Basic rate limiting
+- [x] Safe text rendering without HTML execution
+- **Done when:** the public endpoint handles basic abuse safely
+
+## Step 13. Polish and States
+
+- [x] Loading, empty, and error states
+- [x] Delete confirmations and server error messages
+- [x] Responsive mobile-to-desktop layouts
+- [x] Product copy and microcopy
+- **Done when:** the product feels complete
+
+## Step 14. Quality Checks
+
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm run build`
+- [x] Manual end-to-end flow with free OpenRouter models
+- **Done when:** all checks pass
+
+## Step 15. Presentation
+
+- [x] `docs/DEMO_SCRIPT.md`
+- [x] Test knowledge content
+- [x] README with setup, env, and demo instructions
+- **Done when:** the demo can be presented without improvisation
+
+## Definition of Done
+
+- [x] Project starts with one command after setup
+- [x] PDF, DOCX, TXT, MD, and manual text are supported
+- [x] Questions return grounded answers with sources
+- [x] Unknown questions do not produce invented facts
+- [x] Widget works on the demo website
+- [x] Free limits and mock upgrade work
+- [x] Authentication isolates user data
+- [x] Pages are responsive
+- [x] Lint, typecheck, and build pass
+- [x] Presentation script is ready
