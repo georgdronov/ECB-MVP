@@ -5,15 +5,18 @@
   var baseUrl = script.getAttribute('data-base-url') || new URL(script.src).origin;
   if (!botId) return;
   var button = document.createElement('button');
+  button.setAttribute('data-helpy-widget', 'button');
   button.type = 'button';
   button.setAttribute('aria-label', 'Open chat');
   button.textContent = '✦';
   Object.assign(button.style, { position: 'fixed', right: '24px', bottom: '24px', width: '56px', height: '56px', border: '0', borderRadius: '18px', background: '#5b4bff', color: '#fff', fontSize: '24px', cursor: 'pointer', boxShadow: '0 10px 30px rgba(28,27,26,.2)', zIndex: '2147483646' });
   var frame = document.createElement('iframe');
+  frame.setAttribute('data-helpy-widget', 'frame');
   frame.src = baseUrl + '/embed/' + encodeURIComponent(botId);
   frame.title = 'Chat assistant';
   Object.assign(frame.style, { display: 'none', position: 'fixed', right: '24px', bottom: '94px', width: 'min(400px, calc(100vw - 32px))', height: 'min(650px, calc(100vh - 120px))', border: '0', borderRadius: '20px', boxShadow: '0 20px 60px rgba(28,27,26,.2)', zIndex: '2147483645', background: '#faf8f5' });
   var label = document.createElement('div');
+  label.setAttribute('data-helpy-widget', 'label');
   label.textContent = 'Powered by Helply';
   Object.assign(label.style, { position: 'fixed', right: '25px', bottom: '5px', color: '#6b6560', font: '10px system-ui', zIndex: '2147483646' });
   button.addEventListener('click', function () { var open = frame.style.display !== 'none'; frame.style.display = open ? 'none' : 'block'; label.style.display = open ? 'block' : 'none'; button.textContent = open ? '✦' : '×'; });
