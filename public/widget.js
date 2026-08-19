@@ -14,11 +14,22 @@
   frame.setAttribute('data-helpy-widget', 'frame');
   frame.src = baseUrl + '/embed/' + encodeURIComponent(botId);
   frame.title = 'Chat assistant';
-  Object.assign(frame.style, { display: 'none', position: 'fixed', right: '24px', bottom: '94px', width: 'min(400px, calc(100vw - 32px))', height: 'min(650px, calc(100vh - 120px))', border: '0', borderRadius: '20px', boxShadow: '0 20px 60px rgba(28,27,26,.2)', zIndex: '2147483645', background: '#faf8f5' });
+  Object.assign(frame.style, { display: 'none', position: 'fixed', right: '24px', bottom: '94px', width: 'min(380px, calc(100vw - 32px))', height: 'min(570px, calc(100vh - 120px))', border: '0', borderRadius: '20px', boxShadow: '0 20px 60px rgba(28,27,26,.2)', zIndex: '2147483645', background: '#faf8f5' });
   var label = document.createElement('div');
   label.setAttribute('data-helpy-widget', 'label');
   label.textContent = 'Powered by Helply';
   Object.assign(label.style, { position: 'fixed', right: '25px', bottom: '5px', color: '#6b6560', font: '10px system-ui', zIndex: '2147483646' });
   button.addEventListener('click', function () { var open = frame.style.display !== 'none'; frame.style.display = open ? 'none' : 'block'; label.style.display = open ? 'block' : 'none'; button.textContent = open ? '✦' : '×'; });
   document.body.appendChild(frame); document.body.appendChild(label); document.body.appendChild(button);
+  var media = window.matchMedia('(max-width: 640px)');
+  function fitToViewport() {
+    if (media.matches) {
+      frame.style.right = '16px'; frame.style.bottom = '88px'; frame.style.width = 'calc(100vw - 32px)'; frame.style.height = 'min(570px, calc(100vh - 112px))';
+      button.style.right = '16px'; button.style.bottom = '20px'; label.style.right = '17px';
+    } else {
+      frame.style.right = '24px'; frame.style.bottom = '94px'; frame.style.width = 'min(380px, calc(100vw - 32px))'; frame.style.height = 'min(570px, calc(100vh - 120px))';
+      button.style.right = '24px'; button.style.bottom = '24px'; label.style.right = '25px';
+    }
+  }
+  fitToViewport(); window.addEventListener('resize', fitToViewport);
 })();
