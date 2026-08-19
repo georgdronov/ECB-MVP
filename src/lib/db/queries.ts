@@ -101,9 +101,10 @@ function cosineSimilarity(left: number[], right: number[]) {
   return dot / (Math.sqrt(leftMagnitude) * Math.sqrt(rightMagnitude) || 1);
 }
 
-export function searchChunks(userId: string, queryEmbedding: number[], limit = 5) {
+export function searchChunks(userId: string, queryEmbedding: number[], limit = 6) {
   const chunks = getDatabase().prepare("SELECT c.id, c.document_id, d.title, c.content, c.embedding FROM document_chunks c JOIN documents d ON d.id = c.document_id WHERE c.user_id = ? AND d.status = 'ready' AND c.embedding IS NOT NULL").all(userId) as SearchChunk[];
-  return chunks.map((chunk) => ({ ...chunk, similarity: cosineSimilarity(queryEmbedding, JSON.parse(chunk.embedding)) })).sort((a, b) => b.similarity - a.similarity).slice(0, limit);
+  const threshold = 0.35;
+  return chunks.map((chunk) => ({ ...chunk, similarity: cosineSimilarity(queryEmbedding, JSON.parse(chunk.embedding)) })).filter((chunk) => chunk.similarity >= threshold).sort((a, b) => b.similarity - a.similarity).slice(0, limit);
 }
 
 export function createConversation(userId: string, chatbotPublicId: string) {

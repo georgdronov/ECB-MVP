@@ -24,8 +24,9 @@ export async function POST(request: Request) {
 
   try {
     const [queryEmbedding] = await createEmbeddings([message]);
-    const matches = searchChunks(target.user_id, queryEmbedding, 5);
+    const matches = searchChunks(target.user_id, queryEmbedding, 6);
     const context = matches.map((match, index) => `[Source ${index + 1}: ${match.title}]\n${match.content}`).join("\n\n");
+    const sources = [...new Map(matches.map((match) => [match.title, { title: match.title, similarity: Math.round(match.similarity * 100) }])).values()];
     const answer = await createChatCompletion([
       { role: "system", content: `You are ${target.name}, a precise company knowledge assistant. Answer only using the provided context. If the context does not contain the answer, say you don't have enough information and suggest contacting the team. Never invent policies, prices, or facts. Keep answers concise.\n\nCONTEXT:\n${context || "No knowledge sources are available yet."}` },
       ...(body?.history || []).slice(-6),
@@ -33,10 +34,10 @@ export async function POST(request: Request) {
     ]);
     const conversationId = body?.conversationId || createConversation(user?.id || target.user_id, target.public_id);
     saveMessage(conversationId, "user", message);
-    saveMessage(conversationId, "assistant", answer, matches.map((match) => match.title));
+    saveMessage(conversationId, "assistant", answer, sources.map((source) => source.title));
     incrementUsage(owner.id);
     completeOnboarding(owner.id, "first_chat_completed");
-    return NextResponse.json({ answer, conversationId, sources: matches.map((match) => ({ title: match.title, similarity: Math.round(match.similarity * 100) })) });
+    return NextResponse.json({ answer, conversationId, sources });
   } catch {
     return NextResponse.json({ error: "The assistant is temporarily unavailable. Please check the AI configuration and try again." }, { status: 502 });
   }

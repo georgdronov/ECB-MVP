@@ -9,10 +9,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-white shadow-sm hover:bg-accent-hover",
-  secondary: "bg-surface text-foreground shadow-sm ring-1 ring-border hover:bg-surface-muted",
-  ghost: "text-muted hover:bg-surface-muted hover:text-foreground",
-  danger: "bg-danger text-white shadow-sm hover:brightness-95",
+  primary: "bg-accent text-white shadow-sm hover:bg-accent-hover hover:shadow-md",
+  secondary: "bg-surface text-foreground shadow-sm ring-1 ring-border hover:bg-surface-muted hover:shadow-md",
+  ghost: "text-muted hover:bg-surface-muted hover:text-foreground hover:shadow-sm",
+  danger: "bg-danger text-white shadow-sm hover:bg-red-600 hover:shadow-md",
 };
 
 export function Button({
@@ -26,7 +26,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
         variants[variant],
         className,
       )}
